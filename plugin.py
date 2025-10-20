@@ -15,7 +15,7 @@ from typing import Any, Literal
 from pydantic import Field
 
 plugin = NekroPlugin(
-    name="QQ音乐点歌",
+    name="QQ音乐点歌test",
     module_name="order_qqmusic_test",
     description="给予AI助手通过QQ音乐搜索并发送音乐消息的能力",
     version="2.0.4dev",
