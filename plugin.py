@@ -144,10 +144,10 @@ async def send_message(bot, chat_type: str, target_id: int, message) -> bool:
 
 @plugin.mount_sandbox_method(
     SandboxMethodType.TOOL,
-    name="send_music",
+    name="send_music_card",
     description="搜索 QQ 音乐并发送歌曲信息、专辑封面和语音消息"
 )
-async def send_music(
+async def send_music_card(
         _ctx: AgentCtx,
         chat_key: str,
         keyword: str
@@ -208,16 +208,16 @@ async def send_music(
         if not await send_message(bot, chat_type, target_id, voice_msg):
             return "发送语音消息失败"
 
-        # 发送音乐卡片
-        music_card = MessageSegment.music(
-            type="custom",
-            url=music_url,
-            audio=music_url,
-            title=title,
-            image=cover_url,
-        )
-        if not await send_message(bot, chat_type, target_id, music_card):
-            return "发送音乐卡片失败"
+        # # 发送音乐卡片
+        # music_card = MessageSegment.music(
+        #     type="custom",
+        #     url="https://y.qq.com/",
+        #     audio=music_url,
+        #     title=title,
+        #     image=cover_url,
+        # )
+        # if not await send_message(bot, chat_type, target_id, music_card):
+        #     return "发送音乐卡片失败"
 
         return f"歌曲《{title}》已发送"
 
