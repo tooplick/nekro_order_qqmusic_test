@@ -208,6 +208,17 @@ async def send_music(
         if not await send_message(bot, chat_type, target_id, voice_msg):
             return "发送语音消息失败"
 
+        # 发送音乐卡片
+        music_card = MessageSegment.music(
+            type="custom",
+            url=music_url,
+            audio=music_url,
+            title=title,
+            image=cover_url,
+        )
+        if not await send_message(bot, chat_type, target_id, music_card):
+            return "发送音乐卡片失败"
+
         return f"歌曲《{title}》已发送"
 
     except Exception as e:
