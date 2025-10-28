@@ -27,10 +27,10 @@ plugin = NekroPlugin(
 class QQMusicPluginConfig(ConfigBase):
     """QQ音乐插件配置项"""
     
-    cover_size: Literal["150", "300", "500", "800"] = Field(
-        default="300", 
+    cover_size: Literal[ "0","150", "300", "500", "800"] = Field(
+        default="500", 
         title="专辑封面尺寸",
-        description="选择发送专辑封面的图片尺寸（像素）",
+        description="选择发送专辑封面的图片尺寸,0表示不发送封面",
         json_schema_extra={
             "description": "支持150x150、300x300、500x500、800x800四种尺寸"
         }
@@ -111,10 +111,12 @@ async def get_song_url(song_info: dict, credential: Credential, preferred_qualit
     # 所有音质都失败
     raise ValueError(f"无法获取歌曲下载链接，所有音质尝试均失败。最后错误: {last_exception}")
 
-def get_cover(mid: str, size: int = 300) -> str:  # 修改：默认尺寸改为300
+def get_cover(mid: str, size: int = 300) -> str | None:
     """获取专辑封面链接"""
+    if size == 0:
+        return None  # 尺寸为0时不发送封面
     if size not in [150, 300, 500, 800]:
-        raise ValueError("不支持的封面尺寸")
+        raise ValueError("不发送封面")
     return f"https://y.gtimg.cn/music/photo_new/T002R{size}x{size}M000{mid}.jpg"
 
 def parse_chat_key(chat_key: str) -> tuple[str, int]:
@@ -144,10 +146,10 @@ async def send_message(bot, chat_type: str, target_id: int, message) -> bool:
 
 @plugin.mount_sandbox_method(
     SandboxMethodType.TOOL,
-    name="send_music_card",
+    name="send_music_test",
     description="搜索 QQ 音乐并发送歌曲信息、专辑封面和语音消息"
 )
-async def send_music_card(
+async def send_music_test(
         _ctx: AgentCtx,
         chat_key: str,
         keyword: str
@@ -157,7 +159,7 @@ async def send_music_card(
 
     Args:
         _ctx (AgentCtx): 插件调用上下文
-        chat_key (str): 会话标识，例如 "adapter-priv_123456" 或 "adapter-group_123456"
+        chat_key (str): 会话标识，例如"onebot_v11-private_12345678" 或 "onebot_v11-group_12345678"
         keyword (str): 搜索关键词：歌曲名 歌手名
 
     Returns:
@@ -199,25 +201,15 @@ async def send_music_card(
             return "发送文字消息失败"
 
         # 发送专辑封面
-        cover_msg = MessageSegment.image(cover_url)
-        if not await send_message(bot, chat_type, target_id, cover_msg):
-            return "发送专辑封面失败"
+        if cover_url:
+            cover_msg = MessageSegment.image(cover_url)
+            if not await send_message(bot, chat_type, target_id, cover_msg):
+                return "发送专辑封面失败"
 
         # 发送语音消息
         voice_msg = MessageSegment.record(file=music_url)
         if not await send_message(bot, chat_type, target_id, voice_msg):
             return "发送语音消息失败"
-
-        # # 发送音乐卡片
-        # music_card = MessageSegment.music(
-        #     type="custom",
-        #     url="https://y.qq.com/",
-        #     audio=music_url,
-        #     title=title,
-        #     image=cover_url,
-        # )
-        # if not await send_message(bot, chat_type, target_id, music_card):
-        #     return "发送音乐卡片失败"
 
         return f"歌曲《{title}》已发送"
 
