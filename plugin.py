@@ -18,7 +18,7 @@ plugin = NekroPlugin(
     name="QQ音乐点歌test",
     module_name="order_qqmusic_test",
     description="给予AI助手通过QQ音乐搜索并发送音乐消息的能力",
-    version="2.0.4dev",
+    version="2.0.5dev",
     author="GeQian",
     url="https://github.com/tooplick/nekro_order_qqmusic_test",
 )
@@ -26,11 +26,11 @@ plugin = NekroPlugin(
 @plugin.mount_config()
 class QQMusicPluginConfig(ConfigBase):
     """QQ音乐插件配置项"""
-    
-    cover_size: Literal[ "0","150", "300", "500", "800"] = Field(
-        default="500", 
+
+    cover_size: Literal["0", "150", "300", "500", "800"] = Field(
+        default="500",
         title="专辑封面尺寸",
-        description="选择发送专辑封面的图片尺寸,0表示不发送封面",
+        description="选择专辑封面尺寸,0表示不发送封面",
         json_schema_extra={
             "description": "支持150x150、300x300、500x500、800x800四种尺寸"
         }
@@ -116,7 +116,7 @@ def get_cover(mid: str, size: int = 300) -> str | None:
     if size == 0:
         return None  # 尺寸为0时不发送封面
     if size not in [150, 300, 500, 800]:
-        raise ValueError("不发送封面")
+        raise ValueError("封面尺寸必须是150、300、500或800")
     return f"https://y.gtimg.cn/music/photo_new/T002R{size}x{size}M000{mid}.jpg"
 
 def parse_chat_key(chat_key: str) -> tuple[str, int]:
@@ -210,6 +210,21 @@ async def send_music_test(
         voice_msg = MessageSegment.record(file=music_url)
         if not await send_message(bot, chat_type, target_id, voice_msg):
             return "发送语音消息失败"
+
+        
+        # 发送音乐卡片
+        music_card = MessageSegment.music(
+            type="custom",
+            url=f"https://y.qq.com/n/ryqq/songDetail/{mid}",
+            audio=music_url,
+            title=title,
+            image=cover_url
+        )  
+        
+        if not await send_message(bot, chat_type, target_id, music_card):
+            return "发送音乐卡片失败"
+
+    
 
         return f"歌曲《{title}》已发送"
 
